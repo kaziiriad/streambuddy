@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Available Videos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .video-list {
+            list-style: none;
+            padding: 0;
+        }
+        .video-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .video-item:hover {
+            background: #e9ecef;
+        }
+        .video-item a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .video-item a:hover {
+            text-decoration: underline;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .status-completed {
+            background: #28a745;
+            color: white;
+        }
+        .status-processing {
+            background: #ffc107;
+            color: black;
+        }
+        .status-failed {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Available Videos</h1>
+        <ul class="video-list">
+            {% for video in videos %}
+            <li class="video-item">
+                <a href="{% url 'video_player' video.title %}">{{ video.title }}</a>
+                <span class="status status-{{ video.status }}">{{ video.status }}</span>
+            </li>
+            {% empty %}
+            <li class="video-item">No videos available</li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

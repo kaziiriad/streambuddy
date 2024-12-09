@@ -1,0 +1,27 @@
+# Core
+Django==5.1.4
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+
+# AWS
+boto3==1.34.7
+botocore==1.34.7
+
+# Video Processing
+ffmpeg-python==0.2.0  # Python bindings for FFmpeg
+
+# File Handling
+python-magic==0.4.27  # For file type detection
+# python-magic-bin==0.4.14  # Required for Windows systems
+
+# Utils
+python-dotenv==1.0.0  # For environment variables
+
+# Development
+black==23.12.1  # Code formatter
+flake8==7.0.0   # Linter
+pytest==7.4.3   # Testing
+pytest-django==4.7.0  # Django test integration
+
+# API Documentation
+drf-yasg==1.21.7
