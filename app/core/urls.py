@@ -1,5 +1,5 @@
 from django.urls import path
-from .api.upload import VideoUploadAPIView
+from .api.upload import VideoUploadAPIView, VideoProcessingStatusView
 from .api.streaming import VideoStreamingAPIView, VideoSegmentAPIView, VideoInfoAPIView
 from .views import VideoPlayerView
 
@@ -10,4 +10,5 @@ urlpatterns = [
     path('videos/<str:title>/mpd/', VideoStreamingAPIView.as_view(), name='serve_mpd'),
     path('videos/<str:title>/segments/<str:segment>/', VideoSegmentAPIView.as_view(), name='serve_segments'),
     
+    path('tasks/<str:task_id>/', VideoProcessingStatusView.as_view(), name='task_status'),
 ]

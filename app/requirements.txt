@@ -25,3 +25,9 @@ pytest-django==4.7.0  # Django test integration
 
 # API Documentation
 drf-yasg==1.21.7
+
+
+# Background Tasks
+celery==5.3.6
+redis==5.0.1
+django-celery-results==2.5.1

@@ -49,7 +49,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',  # If using CORS
     'core',  # Make sure this is here
-    'drf_yasg'
+    'drf_yasg',
+    # 'storages',
+    'django_celery_results'
+
 ]
 
 REST_FRAMEWORK = {
@@ -110,12 +113,12 @@ WSGI_APPLICATION = 'streambuddy.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 
 # Password validation
@@ -193,3 +196,12 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1

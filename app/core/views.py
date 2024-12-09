@@ -20,12 +20,14 @@ class VideoPlayerView(TemplateView):
                 'title': metadata.get('title'),
                 'status': metadata.get('status'),
                 'uploaded_at': metadata.get('uploaded_at'),
+                'task_id': metadata.get('task_id')  # Include task_id in context
             })
         except Exception as e:
             raise Http404(f"Error loading video: {str(e)}")
             
         return context
 
+        
 class VideoListView(TemplateView):
     template_name = 'core/video_list.html'
     
