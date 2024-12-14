@@ -222,6 +222,8 @@ LOGGING = {
     }
 }
 
+# APPEND_SLASH = False  # Prevent Django from appending slashes
+
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['json']
@@ -233,3 +235,33 @@ CELERY_WORKER_MAX_MEMORY_PER_CHILD = 1000000  # 1GB in KB
 CELERY_WORKER_MAX_TASKS_PER_CHILD = 1  # Restart worker after each task
 CELERY_TASK_SOFT_TIME_LIMIT = None
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+# Optional - if you need more specific control
+CORS_ALLOWED_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS'
+]
+
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+

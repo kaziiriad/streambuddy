@@ -197,7 +197,7 @@
                 `Uploading: ${Math.round(percent)}%`;
         }
 
-        function startProcessingCheck(title) {
+        {% comment %} function startProcessingCheck(title) {
             processingProgress.style.display = 'block';
             
             processingCheckInterval = setInterval(async () => {
@@ -242,7 +242,7 @@
                 const seconds = data.estimated_time_remaining % 60;
                 estTime.textContent = `Estimated time remaining: ${minutes}m ${seconds}s`;
             }
-        }
+        } {% endcomment %}
 
         function showStatus(message, type) {
             statusMessage.textContent = message;

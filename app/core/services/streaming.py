@@ -43,6 +43,13 @@ class StreamingService:
                 file_path = os.path.join(self.output_dir, title, segment)
                 if not os.path.exists(file_path):
                     raise FileNotFoundError()
+
+            logging.info(f"Attempting to serve segment from: {file_path}")
+            
+            if not os.path.exists(file_path):
+                logging.error(f"Segment file not found at: {file_path}")
+                raise Http404(f"Segment not found: {segment}")
+
             
             if not self._is_valid_segment(title, segment):
                 raise Http404("Invalid segment requested")
@@ -54,6 +61,9 @@ class StreamingService:
                 content_type=content_type
             )
             response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'Content-Type'
+
             return response
         except FileNotFoundError:
             raise Http404(f"Segment not found: {segment}")
@@ -64,6 +74,9 @@ class StreamingService:
     def _is_valid_segment(self, title, segment):
         """Validate that the segment belongs to the specified video."""
         try:
+
+            logging.info(f"Validating segment: {segment} for video: {title}")
+
             # Valid extensions
             valid_extensions = ('.mp4', '.m4s', '.mpd')
             if not segment.endswith(valid_extensions):
