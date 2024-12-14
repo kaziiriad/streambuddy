@@ -65,7 +65,7 @@
         <ul class="video-list">
             {% for video in videos %}
             <li class="video-item">
-                <a href="{% url 'video_player' video.title %}">{{ video.title }}</a>
+                <a href="{% url 'video_player' video.title %}"> {{ video.display_title|default:video.title }}</a>
                 <span class="status status-{{ video.status }}">{{ video.status }}</span>
             </li>
             {% empty %}

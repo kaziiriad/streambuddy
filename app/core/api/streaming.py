@@ -11,7 +11,12 @@ from ..services.streaming import StreamingService
 from ..services.video_processor import VideoProcessor
 from ..serializers.video import VideoMetadataSerializer
 
+from ..throttles import VideoUploadRateThrottle, StreamingRateThrottle, BurstRateThrottle
+
+
 class VideoStreamingAPIView(APIView):
+
+    throttle_classes = [StreamingRateThrottle]
 
     def __init__(self):
         self.streaming_service = StreamingService()
@@ -43,6 +48,8 @@ class VideoStreamingAPIView(APIView):
         return self.streaming_service.serve_mpd(title)
     
 class VideoSegmentAPIView(APIView):
+
+    throttle_classes = [StreamingRateThrottle]
 
     def __init__(self):
         self.streaming_service = StreamingService()
@@ -80,6 +87,9 @@ class VideoSegmentAPIView(APIView):
         return self.streaming_service.serve_segment(title, segment)
 
 class VideoInfoAPIView(APIView):
+
+    throttle_classes = [BurstRateThrottle]
+
     def __init__(self):
         self.video_processor = VideoProcessor()
         super().__init__()

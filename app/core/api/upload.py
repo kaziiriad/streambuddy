@@ -22,12 +22,17 @@ from ..utils.exceptions import (
     DuplicateTitleError,
 )
 from ..utils.validators import VideoValidator
+from ..utils.filename_utils import sanitize_filename
+
+from ..throttles import VideoUploadRateThrottle, StreamingRateThrottle, BurstRateThrottle
+
 
 from datetime import datetime
 
 from celery.result import AsyncResult
 
 class VideoProcessingStatusView(APIView):
+    throttle_classes = [BurstRateThrottle]
     def get(self, request, task_id):
         task_result = AsyncResult(task_id)
         
@@ -47,6 +52,7 @@ class VideoProcessingStatusView(APIView):
 
 class VideoUploadAPIView(APIView):
     parser_classes = (MultiPartParser, FormParser)
+    throttle_classes = [VideoUploadRateThrottle] 
 
     def __init__(self):
         self.storage_service = StorageService()
@@ -88,7 +94,8 @@ class VideoUploadAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            title = serializer.validated_data['title']
+            original_title = serializer.validated_data['title']
+            safe_title = sanitize_filename(original_title)
             file = serializer.validated_data['file']
 
             # Validate the video file
@@ -103,30 +110,32 @@ class VideoUploadAPIView(APIView):
             # Save initial metadata
             storage = StorageService()
             metadata = {
-                'title': title,
+                'title': safe_title,
+                'display_title': original_title,
                 'original_filename': file.name,
                 'uploaded_at': str(datetime.now()),
                 'processed': False,
                 'status': 'uploaded'
             }
-            storage.save_metadata(title, metadata)
+            storage.save_metadata(safe_title, metadata)
 
             # Save the file temporarily
-            temp_path = storage.save_temp_upload(file, title)
+            temp_path = storage.save_temp_upload(file, safe_title)
 
             # Start processing task
-            task = process_video_task.delay(temp_path, title)
+            task = process_video_task.delay(temp_path, safe_title)
 
             # Update metadata with task ID
             metadata.update({
                 'status': 'queued',
                 'task_id': task.id
             })
-            storage.save_metadata(title, metadata)
+            storage.save_metadata(safe_title, metadata)
 
             return Response({
                 'message': 'Video upload successful, processing started',
-                'title': title,
+                'title': safe_title,
+                'display_title': original_title,
                 'task_id': task.id,
                 'status': 'queued'
             }, status=status.HTTP_202_ACCEPTED)
@@ -136,3 +145,41 @@ class VideoUploadAPIView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class VideoProcessProgressView(APIView):
+    @swagger_auto_schema(
+        operation_description="Get video processing progress",
+        responses={
+            200: openapi.Response(
+                description="Processing progress",
+                examples={
+                    "application/json": {
+                        "status": "processing",
+                        "progress": 45.5,
+                        "current_resolution": "720p",
+                        "resolution_progress": "2/3",
+                        "estimated_time_remaining": 120
+                    }
+                }
+            )
+        }
+    )
+    def get(self, request, title):
+        storage_service = StorageService()
+        metadata = storage_service.get_metadata(title)
+        
+        if not metadata:
+            return Response(
+                {"error": "Video not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        progress_data = {
+            "status": metadata.get("status", "unknown"),
+            "progress": metadata.get("processing_progress", 0),
+            "current_resolution": metadata.get("current_resolution"),
+            "resolution_progress": metadata.get("resolution_progress"),
+            "estimated_time_remaining": metadata.get("estimated_time_remaining")
+        }
+        
+        return Response(progress_data)

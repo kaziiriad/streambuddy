@@ -128,7 +128,9 @@ class StorageService:
             for filename in os.listdir(self.metadata_root):
                 if filename.endswith('.json'):
                     with open(os.path.join(self.metadata_root, filename)) as f:
-                        videos.append(json.load(f))
+                        video_data = json.load(f)
+                        if video_data.get('title'):  # Only add if title exists
+                            videos.append(video_data)
             return videos
         except Exception as e:
             raise StorageError(f"Failed to list videos: {str(e)}")

@@ -30,7 +30,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
-
+SERVER_BASE_URL = os.getenv('SERVER_BASE_URL', 'http://localhost:8000')
 VIDEO_SETTINGS = {
     'MAX_UPLOAD_SIZE': int(os.getenv('MAX_UPLOAD_SIZE', 10737418240)),  # 10GB default
     'DEFAULT_QUALITY': os.getenv('DEFAULT_VIDEO_QUALITY', '1080p'),
@@ -61,6 +61,17 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser',
         'rest_framework.parsers.FormParser',
     ],
+        'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',  # Limit anonymous users to 100 requests per day
+        'user': '1000/day',  # Limit authenticated users to 1000 requests per day
+        'uploads': '10/day',  # Limit video uploads to 10 per day
+        'streaming': '1000/hour',  # Limit streaming requests
+    },
+    'EXCEPTION_HANDLER': 'core.throttles.custom_throttle_handler',
 }
 
 SWAGGER_SETTINGS = {
@@ -86,6 +97,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.RateLimitHeadersMiddleware'
+
 ]
 
 ROOT_URLCONF = 'streambuddy.urls'
@@ -190,11 +203,23 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
         },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'rate_limits.log',
+        },
     },
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
     },
+    'loggers': {
+        'django.request': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    }
 }
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
@@ -203,5 +228,8 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_TASK_TIME_LIMIT = None  # No time limit
+CELERY_WORKER_MAX_MEMORY_PER_CHILD = 1000000  # 1GB in KB
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1  # Restart worker after each task
+CELERY_TASK_SOFT_TIME_LIMIT = None
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1

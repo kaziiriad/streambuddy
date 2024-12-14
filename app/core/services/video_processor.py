@@ -2,12 +2,15 @@ import os
 import json
 import logging
 import subprocess
+import math
 from datetime import datetime
+import time
 import xml.etree.ElementTree as ET
 from urllib.parse import urljoin
+from django.conf import settings
 
 from django.core.exceptions import ValidationError
-
+from ..utils.progress_tracker import FFmpegProgress
 from ..utils.validators import VideoValidator
 from ..utils.exceptions import VideoProcessingError, StorageError, DuplicateTitleError, InvalidVideoError
 from .storage import StorageService
@@ -113,32 +116,133 @@ class VideoProcessor:
                     logging.error(f"Failed to cleanup temporary file: {str(e)}")
 
 
-    def process_to_dash(self, file_path, title):
-        """Convert video to DASH format."""
-        output_path = os.path.join(self.storage.mpd_root, f"{title}.mpd")
+    # def process_to_dash(self, file_path, title):
+    #     """Convert video to DASH format."""
+    #     output_path = os.path.join(self.storage.mpd_root, f"{title}.mpd")
         
-        command = [
-            'ffmpeg', '-i', file_path,
-            '-map', '0',
-            '-s:v', '1920x1080',
-            '-c:v', 'libx264',
-            '-b:v', '2400k',
-            '-an',
-            '-f', 'dash',
-            '-seg_duration', '4',
-            '-adaptation_sets', 'id=0,streams=v',
-            '-use_template', '1',
-            '-use_timeline', '1',
-            output_path
-        ]
-        
-        result = subprocess.run(command, capture_output=True, text=True)
-        
-        if result.returncode == 0:
-            # Add BaseURL to the MPD file
-            self._add_base_url_to_mpd(output_path, title)
+    #     # command = [
+    #     #     'ffmpeg', '-i', file_path,
+    #     #     # 1080p
+    #     #     '-map', '0:v', '-s:v:0', '1920x1080', '-c:v:0', 'libx264', '-b:v:0', '5000k',
+    #     #     # 720p
+    #     #     '-map', '0:v', '-s:v:1', '1280x720', '-c:v:1', 'libx264', '-b:v:1', '3000k',
+    #     #     # 480p
+    #     #     '-map', '0:v', '-s:v:2', '854x480', '-c:v:2', 'libx264', '-b:v:2', '1000k',
+    #     #     '-an',
+    #     #     '-f', 'dash',
+    #     #     '-seg_duration', '4',
+    #     #     '-adaptation_sets', 'id=0,streams=v',
+    #     #     '-use_template', '1',
+    #     #     '-use_timeline', '1',
+    #     #     output_path
+    #     # ]
+
+    #     command = [
+    #         'ffmpeg', '-i', file_path,
+    #         # 1080p
+    #         '-map', '0:v', '-s:v:0', '1920x1080', 
+    #         '-c:v:0', 'libx264', '-b:v:0', '5000k',
+    #         '-maxrate:v:0', '5500k', '-bufsize:v:0', '10000k',  # Rate control
             
-        return result
+    #         # 720p
+    #         '-map', '0:v', '-s:v:1', '1280x720',
+    #         '-c:v:1', 'libx264', '-b:v:1', '3000k',
+    #         '-maxrate:v:1', '3300k', '-bufsize:v:1', '6000k',
+            
+    #         # 480p
+    #         '-map', '0:v', '-s:v:2', '854x480',
+    #         '-c:v:2', 'libx264', '-b:v:2', '1000k',
+    #         '-maxrate:v:2', '1100k', '-bufsize:v:2', '2000k',
+            
+    #         # Common settings
+    #         '-preset', 'medium',  # Balance between speed and quality
+    #         '-profile:v', 'main',
+    #         '-bf', '1',
+    #         '-keyint_min', '48',
+    #         '-g', '48',
+    #         '-sc_threshold', '0',
+    #         '-b_strategy', '0',
+    #         '-ar', '48000',  # Audio sample rate
+    #         '-use_timeline', '1',
+    #         '-use_template', '1',
+    #         '-window_size', '5',
+    #         '-adaptation_sets', 'id=0,streams=v',
+    #         '-f', 'dash',
+    #         '-seg_duration', '4',
+    #         output_path
+    #     ]
+
+    #     result = subprocess.run(command, capture_output=True, text=True)
+        
+    #     if result.returncode == 0:
+    #         # Add BaseURL to the MPD file
+    #         self._add_base_url_to_mpd(output_path, title)
+            
+    #     return result
+
+    # def get_video_duration(self, file_path):
+    #     """Get video duration using FFprobe."""
+    #     try:
+    #         cmd = [
+    #             'ffprobe',
+    #             '-v', 'error',
+    #             '-show_entries', 'format=duration',
+    #             '-of', 'json',
+    #             file_path
+    #         ]
+    #         result = subprocess.run(cmd, capture_output=True, text=True)
+    #         data = json.loads(result.stdout)
+    #         return float(data['format']['duration'])
+    #     except Exception as e:
+    #         logging.error(f"Error getting video duration: {str(e)}")
+    #         return 0
+
+    def process_to_dash(self, file_path, title):
+        """Convert video to DASH format with single 1080p quality."""
+        try:
+            output_dir = os.path.join(self.storage.mpd_root, title)  # Create subfolder for each video
+            os.makedirs(output_dir, exist_ok=True)
+            output_path = os.path.join(output_dir, f"{title}.mpd")
+            
+            command = [
+                'ffmpeg', '-i', file_path,
+                '-map', '0',
+                '-s:v', '1920x1080',
+                '-c:v', 'libx264',
+                '-b:v', '2400k',
+                '-preset', 'veryfast',
+                '-an',
+                '-f', 'dash',
+                '-seg_duration', '4',
+                '-adaptation_sets', 'id=0,streams=v',
+                '-use_template', '1',
+                '-use_timeline', '1',
+                '-init_seg_name', 'init-$RepresentationID$.m4s',
+                '-media_seg_name', 'chunk-$RepresentationID$-$Number%05d$.m4s',
+                output_path
+            ]
+
+            result = subprocess.run(command, capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                self._add_base_url_to_mpd(output_path, title)
+                # Update metadata with mpd_file path
+                metadata = self.storage.get_metadata(title)
+                metadata.update({
+                    'status': 'completed',
+                    'processing_progress': 100,
+                    'completed_at': str(datetime.now()),
+                    'mpd_file': f"{title}/{title}.mpd",  # Include subdirectory in path
+                    'title': title
+                })
+                self.storage.save_metadata(title, metadata)
+                return result
+            else:
+                raise Exception(f"DASH creation failed: {result.stderr}")
+
+        except Exception as e:
+            logging.error(f"Error in process_to_dash: {str(e)}")
+            raise
 
     def _add_base_url_to_mpd(self, mpd_path, title):
         """Add BaseURL element to MPD file."""
@@ -149,7 +253,7 @@ class VideoProcessor:
             
             # Create BaseURL element
             # This URL should match your segment endpoint pattern
-            base_url = f"/api/videos/{title}/segments/"
+            base_url = f"{settings.SERVER_BASE_URL}/api/videos/{title}/segments/"
             
             # Check if BaseURL already exists
             existing_base_url = root.find('{*}BaseURL')

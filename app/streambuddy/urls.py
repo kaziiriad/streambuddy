@@ -22,7 +22,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-from core.views import VideoPlayerView, VideoListView
+from core.views import VideoPlayerView, VideoListView, VideoUploadView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -43,6 +43,7 @@ urlpatterns = [
 
     path('videos/<str:title>/', VideoPlayerView.as_view(), name='video_player'),
     path('videos/', VideoListView.as_view(), name='video_list'),
+    path('upload/', VideoUploadView.as_view(), name='video_upload_page'),
 
     
     # Swagger URLs

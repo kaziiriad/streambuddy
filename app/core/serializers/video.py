@@ -17,6 +17,7 @@ class VideoUploadSerializer(serializers.Serializer):
 class VideoMetadataSerializer(serializers.Serializer):
 
     title = serializers.CharField()
+    display_title = serializers.CharField()  # Original title for display
     original_filename = serializers.CharField()
     uploaded_at = serializers.DateTimeField()
     processed = serializers.BooleanField(default=False)
