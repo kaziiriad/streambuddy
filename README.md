@@ -102,6 +102,7 @@ graph TB
 
 - Python 3.10 or higher
 - FFmpeg
+- Celery
 - Redis
 - Docker & Docker Compose (optional)
 - AWS Account (optional, for S3 storage)
