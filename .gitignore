@@ -177,3 +177,4 @@ app/media/*
 .vscode
 
 *.rdb
+.git.backup_2
