@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - DEBUG=true
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+    env_file:
+      - ./app/.env
+    depends_on:
+      - redis
+
+  celery:
+    build: .
+    command: celery -A streambuddy worker --loglevel=info
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  media_data:
+  redis_data:
