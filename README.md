@@ -221,7 +221,7 @@ For production deployment:
 DEBUG=False
 ALLOWED_HOSTS=your-domain.com
 USE_S3=True
-
+```
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -237,5 +237,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🙏 Acknowledgments
 
 - FFmpeg team for the excellent video processing library
+- Celery and Redis for task queue management
 - Django and Django REST Framework communities
 - AWS for providing scalable storage solutions
