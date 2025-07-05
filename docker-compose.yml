@@ -18,7 +18,7 @@ services:
       - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
     env_file:
-      - ./app/.env
+      - ./.env
     depends_on:
       - redis
 

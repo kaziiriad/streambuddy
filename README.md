@@ -2,7 +2,7 @@
 
 StreamBuddy is a scalable video streaming platform built using Django REST API, DASH, and AWS S3 for storage. It features an asynchronous video processing pipeline, adaptive bitrate streaming, and comprehensive API documentation.
 
-![Project Image](app/image.png)
+![Project Image](docs/assets/image.png)
 
 ## 🚀 Features
 
