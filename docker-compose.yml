@@ -44,8 +44,6 @@ services:
 
   postgres:
     image: postgres:13-alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -56,4 +54,3 @@ services:
 volumes:
   media_data:
   redis_data:
-  postgres_data:

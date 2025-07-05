@@ -16,6 +16,15 @@ from ..serializers.video import VideoMetadataSerializer
 from streambuddy_common.throttles import VideoUploadRateThrottle, StreamingRateThrottle, BurstRateThrottle
 
 
+class VideoListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        videos = Video.objects.filter(user=request.user)
+        serializer = VideoMetadataSerializer(videos, many=True)
+        return Response(serializer.data)
+
+
 class VideoStreamingAPIView(APIView):
     throttle_classes = [StreamingRateThrottle]
     permission_classes = [IsAuthenticated]
@@ -133,6 +142,17 @@ class VideoInfoAPIView(APIView):
             video = Video.objects.get(title=title, user=request.user)
             serializer = VideoMetadataSerializer(video)
             return Response(serializer.data)
+        except Video.DoesNotExist:
+            return Response(
+                {'error': 'Video not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request, title):
+        try:
+            video = Video.objects.get(title=title, user=request.user)
+            video.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         except Video.DoesNotExist:
             return Response(
                 {'error': 'Video not found'},

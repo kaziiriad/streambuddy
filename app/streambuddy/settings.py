@@ -31,11 +31,21 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 SERVER_BASE_URL = os.getenv('SERVER_BASE_URL', 'http://localhost:8000')
+def get_max_upload_size():
+    raw_value = os.getenv('MAX_UPLOAD_SIZE', '10737418240')
+    try:
+        # Take only the numeric part, ignoring comments
+        return int(raw_value.split('#')[0].strip())
+    except (ValueError, IndexError):
+        return 10737418240  # Default to 10GB if parsing fails
+
 VIDEO_SETTINGS = {
-    'MAX_UPLOAD_SIZE': int(os.getenv('MAX_UPLOAD_SIZE', 10737418240)),  # 10GB default
+    'MAX_UPLOAD_SIZE': get_max_upload_size(),
     'DEFAULT_QUALITY': os.getenv('DEFAULT_VIDEO_QUALITY', '1080p'),
 }
 
+
+AUTH_USER_MODEL = 'accounts.User'
 
 # Application definition
 
@@ -105,6 +115,8 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+
 
 REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'accounts.serializers.CurrentUserSerializer',
