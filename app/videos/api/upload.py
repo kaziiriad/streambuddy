@@ -14,17 +14,17 @@ from ..serializers.video import VideoUploadSerializer, VideoMetadataSerializer
 from ..services.video_processor import VideoProcessor
 from ..services.storage import StorageService
 
-from ..utils.exceptions import (
+from streambuddy_common.exceptions import (
     VideoProcessingError,
     StorageError,
     VideoNotFoundError,
     InvalidVideoError,
     DuplicateTitleError,
 )
-from ..utils.validators import VideoValidator
-from ..utils.filename_utils import sanitize_filename
+from streambuddy_common.utils.validators import VideoValidator
+from streambuddy_common.utils.filename_utils import sanitize_filename
 
-from ..throttles import VideoUploadRateThrottle, StreamingRateThrottle, BurstRateThrottle
+from streambuddy_common.throttles import VideoUploadRateThrottle, StreamingRateThrottle, BurstRateThrottle
 
 
 from datetime import datetime

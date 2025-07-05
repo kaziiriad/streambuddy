@@ -1,7 +1,6 @@
 from django.urls import path
-from .api.upload import VideoUploadAPIView, VideoProcessingStatusView, VideoProcessProgressView
+from .api.upload import VideoUploadAPIView, VideoProcessingStatusView
 from .api.streaming import VideoStreamingAPIView, VideoSegmentAPIView, VideoInfoAPIView
-from .views import VideoPlayerView
 
 urlpatterns = [
     # Remove the 'api/' prefix since it's already included in the main urls.py

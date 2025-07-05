@@ -3,7 +3,7 @@ import json
 import boto3
 from datetime import datetime
 from django.conf import settings
-from ..utils.exceptions import StorageError, VideoNotFoundError
+from streambuddy_common.exceptions import StorageError, VideoNotFoundError
 import logging
 
 class StorageService:

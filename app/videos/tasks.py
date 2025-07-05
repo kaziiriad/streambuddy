@@ -2,8 +2,7 @@ from streambuddy.celery import app
 from celery import shared_task
 # ... rest of your tasks code remains the same ...from .services.video_processor import VideoProcessor
 from .services.storage import StorageService
-from .services.video_processor import VideoProcessor
-from .utils.progress_tracker import FFmpegProgress
+from streambuddy_common.utils.progress_tracker import FFmpegProgress
 from datetime import datetime
 import logging
 from celery import Task

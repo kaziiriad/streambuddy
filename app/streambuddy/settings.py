@@ -47,13 +47,32 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',  # If using CORS
-    'core',  # Make sure this is here
+    'accounts',
+    'videos',
+    'streambuddy_common',
     'drf_yasg',
     # 'storages',
-    'django_celery_results'
+    'django_celery_results',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
 
 ]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = (
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
 
 REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
@@ -71,7 +90,7 @@ REST_FRAMEWORK = {
         'uploads': '10/day',  # Limit video uploads to 10 per day
         'streaming': '1000/hour',  # Limit streaming requests
     },
-    'EXCEPTION_HANDLER': 'core.throttles.custom_throttle_handler',
+    'EXCEPTION_HANDLER': 'streambuddy_common.throttles.custom_throttle_handler',
 }
 
 SWAGGER_SETTINGS = {
@@ -97,7 +116,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'core.middleware.RateLimitHeadersMiddleware'
+    'streambuddy_common.middleware.RateLimitHeadersMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 
 ]
 

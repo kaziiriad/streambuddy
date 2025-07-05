@@ -178,3 +178,11 @@ app/media/*
 
 *.rdb
 .git.backup_2/
+
+GEMINI.md
+ACTION_PLAN.md
+CHECKLIST.md
+ROADMAP.md
+RESTRUCTURING.md
+.qodo/
+.gemini/

@@ -10,9 +10,9 @@ from urllib.parse import urljoin
 from django.conf import settings
 
 from django.core.exceptions import ValidationError
-from ..utils.progress_tracker import FFmpegProgress
-from ..utils.validators import VideoValidator
-from ..utils.exceptions import VideoProcessingError, StorageError, DuplicateTitleError, InvalidVideoError
+from streambuddy_common.utils.progress_tracker import FFmpegProgress
+from streambuddy_common.utils.validators import VideoValidator
+from streambuddy_common.exceptions import VideoProcessingError, StorageError, DuplicateTitleError, InvalidVideoError
 from .storage import StorageService
 
 class VideoProcessor:

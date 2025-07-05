@@ -11,7 +11,7 @@ from ..services.streaming import StreamingService
 from ..services.video_processor import VideoProcessor
 from ..serializers.video import VideoMetadataSerializer
 
-from ..throttles import VideoUploadRateThrottle, StreamingRateThrottle, BurstRateThrottle
+from streambuddy_common.throttles import VideoUploadRateThrottle, StreamingRateThrottle, BurstRateThrottle
 
 
 class VideoStreamingAPIView(APIView):
