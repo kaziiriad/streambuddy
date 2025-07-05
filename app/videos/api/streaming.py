@@ -1,12 +1,14 @@
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from django.http import FileResponse, Http404
 
+from ..models import Video
 from ..services.streaming import StreamingService
 from ..services.video_processor import VideoProcessor
 from ..serializers.video import VideoMetadataSerializer
@@ -15,8 +17,8 @@ from streambuddy_common.throttles import VideoUploadRateThrottle, StreamingRateT
 
 
 class VideoStreamingAPIView(APIView):
-
     throttle_classes = [StreamingRateThrottle]
+    permission_classes = [IsAuthenticated]
 
     def __init__(self):
         self.streaming_service = StreamingService()
@@ -45,11 +47,18 @@ class VideoStreamingAPIView(APIView):
 
 
     def get(self, request, title):
-        return self.streaming_service.serve_mpd(title)
+        try:
+            Video.objects.get(title=title, user=request.user)
+            return self.streaming_service.serve_mpd(title)
+        except Video.DoesNotExist:
+            return Response(
+                {'error': 'Video not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
     
 class VideoSegmentAPIView(APIView):
-
     throttle_classes = [StreamingRateThrottle]
+    permission_classes = [IsAuthenticated]
 
     def __init__(self):
         self.streaming_service = StreamingService()
@@ -84,11 +93,18 @@ class VideoSegmentAPIView(APIView):
     )
 
     def get(self, request, title, segment):
-        return self.streaming_service.serve_segment(title, segment)
+        try:
+            Video.objects.get(title=title, user=request.user)
+            return self.streaming_service.serve_segment(title, segment)
+        except Video.DoesNotExist:
+            return Response(
+                {'error': 'Video not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 class VideoInfoAPIView(APIView):
-
     throttle_classes = [BurstRateThrottle]
+    permission_classes = [IsAuthenticated]
 
     def __init__(self):
         self.video_processor = VideoProcessor()
@@ -113,12 +129,12 @@ class VideoInfoAPIView(APIView):
     )
 
     def get(self, request, title):
-        video_info = self.video_processor.get_video_info(title)
-        if not video_info:
+        try:
+            video = Video.objects.get(title=title, user=request.user)
+            serializer = VideoMetadataSerializer(video)
+            return Response(serializer.data)
+        except Video.DoesNotExist:
             return Response(
                 {'error': 'Video not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
-            
-        serializer = VideoMetadataSerializer(video_info)
-        return Response(serializer.data)

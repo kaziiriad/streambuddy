@@ -1,0 +1,25 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+docker-compose.yml
+Dockerfile
+
+# Python
+.venv
+__pycache__/
+*.pyc
+
+# Project specific
+test_samples/
+docs/
+infra/
+.qodo/
+.vscode/
+*.md
+*.log
+*.rdb
+.env
+.env.template

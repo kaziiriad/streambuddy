@@ -1,6 +1,7 @@
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,6 +9,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 from django.core.exceptions import ValidationError
 
+from ..models import Video, VideoStatus
 from ..tasks import process_video_task
 
 from ..serializers.video import VideoUploadSerializer, VideoMetadataSerializer
@@ -52,7 +54,8 @@ class VideoProcessingStatusView(APIView):
 
 class VideoUploadAPIView(APIView):
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = [VideoUploadRateThrottle] 
+    throttle_classes = [VideoUploadRateThrottle]
+    permission_classes = [IsAuthenticated] 
 
     def __init__(self):
         self.storage_service = StorageService()
@@ -108,36 +111,31 @@ class VideoUploadAPIView(APIView):
                 )
 
             # Save initial metadata
-            storage = StorageService()
-            metadata = {
-                'title': safe_title,
-                'display_title': original_title,
-                'original_filename': file.name,
-                'uploaded_at': str(datetime.now()),
-                'processed': False,
-                'status': 'uploaded'
-            }
-            storage.save_metadata(safe_title, metadata)
+            video = Video.objects.create(
+                user=request.user,
+                title=safe_title,
+                display_title=original_title,
+                original_filename=file.name,
+            )
 
             # Save the file temporarily
+            storage = StorageService()
             temp_path = storage.save_temp_upload(file, safe_title)
 
             # Start processing task
-            task = process_video_task.delay(temp_path, safe_title)
+            task = process_video_task.delay(temp_path, safe_title, video.id)
 
             # Update metadata with task ID
-            metadata.update({
-                'status': 'queued',
-                'task_id': task.id
-            })
-            storage.save_metadata(safe_title, metadata)
+            video.task_id = task.id
+            video.status = VideoStatus.QUEUED
+            video.save()
 
             return Response({
                 'message': 'Video upload successful, processing started',
                 'title': safe_title,
                 'display_title': original_title,
                 'task_id': task.id,
-                'status': 'queued'
+                'status': VideoStatus.QUEUED
             }, status=status.HTTP_202_ACCEPTED)
 
         except Exception as e:
@@ -147,6 +145,8 @@ class VideoUploadAPIView(APIView):
             )
 
 class VideoProcessProgressView(APIView):
+    permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(
         operation_description="Get video processing progress",
         responses={
@@ -165,21 +165,18 @@ class VideoProcessProgressView(APIView):
         }
     )
     def get(self, request, title):
-        storage_service = StorageService()
-        metadata = storage_service.get_metadata(title)
-        
-        if not metadata:
+        try:
+            video = Video.objects.get(title=title, user=request.user)
+            progress_data = {
+                "status": video.status,
+                "progress": 0,  # This needs to be implemented
+                "current_resolution": None, # This needs to be implemented
+                "resolution_progress": None, # This needs to be implemented
+                "estimated_time_remaining": None # This needs to be implemented
+            }
+            return Response(progress_data)
+        except Video.DoesNotExist:
             return Response(
                 {"error": "Video not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
-            
-        progress_data = {
-            "status": metadata.get("status", "unknown"),
-            "progress": metadata.get("processing_progress", 0),
-            "current_resolution": metadata.get("current_resolution"),
-            "resolution_progress": metadata.get("resolution_progress"),
-            "estimated_time_remaining": metadata.get("estimated_time_remaining")
-        }
-        
-        return Response(progress_data)
