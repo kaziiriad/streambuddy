@@ -1,0 +1,7 @@
+name: streambuddy-infra
+runtime:
+  name: python
+  options:
+    toolchain: uv
+    virtualenv: ../../.venv
+description: A Pulumi program to deploy the StreamBuddy application's infrastructure on AWS.
