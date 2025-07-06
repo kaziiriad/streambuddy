@@ -9,12 +9,12 @@ load_dotenv(dotenv_path="../../.env")
 
 # --- Pulumi Configuration ---
 django_secret_key = os.getenv("DJANGO_SECRET_KEY")
-postgres_password = os.getenv("POSTGRES_PASSWORD")
 aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 aws_storage_bucket_name = os.getenv("AWS_STORAGE_BUCKET_NAME")
 postgres_db = os.getenv("POSTGRES_DB")
 postgres_user = os.getenv("POSTGRES_USER")
+postgres_password = os.getenv("POSTGRES_PASSWORD")
 postgres_host = os.getenv("POSTGRES_HOST")
 postgres_port = os.getenv("POSTGRES_PORT")
 
