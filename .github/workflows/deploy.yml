@@ -19,8 +19,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd infra/pulumi
           pip install -r requirements.txt
+          cd infra/pulumi
 
       - name: Set up Pulumi
         uses: pulumi/actions@v4
