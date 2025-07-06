@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from .env file, assuming it's in the project root
-load_dotenv()
+load_dotenv(dotenv_path="../../.env")
 
 # --- Pulumi Configuration ---
 django_secret_key = os.getenv("DJANGO_SECRET_KEY")
