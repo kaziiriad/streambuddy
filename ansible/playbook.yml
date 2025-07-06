@@ -1,0 +1,53 @@
+- hosts: all
+  become: yes
+  pre_tasks:
+    - name: Wait for SSH to become available
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: 22
+        delay: 10
+        timeout: 300
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install Docker Compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+        dest: /usr/local/bin/docker-compose
+        mode: 'u+x,g+x,o+x'
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Clone the repository
+      git:
+        repo: 'https://github.com/kaziiriad/streambuddy.git'
+        dest: /home/ubuntu/streambuddy
+        clone: yes
+        update: yes
+
+    - name: Create .env file
+      template:
+        src: .env.j2
+        dest: /home/ubuntu/streambuddy/.env
+
+    - name: Run docker-compose
+      command: docker-compose up -d
+      args:
+        chdir: /home/ubuntu/streambuddy
