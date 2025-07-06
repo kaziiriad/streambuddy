@@ -35,6 +35,7 @@ jobs:
       - name: Run Pulumi
         run: |
           cd infra/pulumi
+          pulumi stack select dev --create
           pulumi up --yes
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
