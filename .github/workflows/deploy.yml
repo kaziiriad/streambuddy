@@ -39,7 +39,7 @@ jobs:
         run: |
 
           cd infra/pulumi
-          uv pip install --system pulumi pulumi-aws pulumi-command
+          pip install pulumi pulumi-aws pulumi-command
           pulumi stack select dev --create
           pulumi up --yes
         env:
