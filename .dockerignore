@@ -6,6 +6,8 @@
 .dockerignore
 docker-compose.yml
 Dockerfile
+Dockerfile.web
+Dockerfile.celery
 
 # Python
 .venv

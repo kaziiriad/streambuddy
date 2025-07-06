@@ -1,48 +1,65 @@
-# 1. Builder Stage: To install dependencies
-FROM python:3.12-slim-bookworm as builder
+# Builder Stage
+FROM python:3.12-slim as builder
 
-# Install curl and other system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
+WORKDIR /app
+
+# Install system dependencies for building packages
+RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:${PATH}"
+# Copy requirements file
+COPY requirements.txt ./
+
+# Install pip and Python dependencies
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Web Stage
+FROM python:3.12-slim as web
 
 WORKDIR /app
 
-# Create a virtual environment
-RUN uv venv /opt/venv
-
-# Copy only the requirements file to leverage Docker cache
-COPY requirements.txt .
-
-# Install dependencies into the virtual environment
-RUN . /opt/venv/bin/activate && uv pip install -r requirements.txt --no-cache
-
-# 2. Runtime Stage: The final, lean image
-FROM python:3.12-slim-bookworm as runtime
-
-WORKDIR /app
-
-# Install runtime system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
     libpq5 \
+    libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the virtual environment from the builder stage
-COPY --from=builder /opt/venv /opt/venv
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Set the PATH to use the virtual environment
-ENV PATH="/opt/venv/bin:${PATH}"
+# Copy application code
+COPY app/ /app/
 
-# Copy the rest of the application code
-COPY . .
+# Collect static files
+RUN python manage.py collectstatic --noinput
 
-# Expose the port and set the entrypoint
+# Expose port
 EXPOSE 8000
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+
+# Command to run Django development server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# Celery Stage
+FROM python:3.12-slim as celery
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    libmagic1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY app/ /app/
+
+# Command to run Celery worker
+CMD ["python", "-m", "celery", "-A", "streambuddy", "worker", "--loglevel=info"]

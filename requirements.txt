@@ -1,36 +1,64 @@
-# Core
-Django==5.1.4
-djangorestframework==3.14.0
-django-cors-headers==4.3.1
-django-allauth==0.61.1
-dj-rest-auth==5.0.2
-
-# AWS
+amqp==5.3.1
+asgiref==3.9.0
+billiard==4.2.1
+black==23.12.1
 boto3==1.34.7
 botocore==1.34.7
-
-# Video Processing
-ffmpeg-python==0.2.0  # Python bindings for FFmpeg
-
-# File Handling
-python-magic==0.4.27  # For file type detection
-# python-magic-bin==0.4.14  # Required for Windows systems
-
-# Utils
-python-dotenv==1.0.0  # For environment variables
-
-# Development
-black==23.12.1  # Code formatter
-flake8==7.0.0   # Linter
-pytest==7.4.3   # Testing
-pytest-django==4.7.0  # Django test integration
-
-# API Documentation
-drf-yasg==1.21.7
-
-
-# Background Tasks
 celery==5.3.6
-redis==5.0.1
+certifi==2025.6.15
+cffi==1.17.1
+charset-normalizer==3.4.2
+click==8.2.1
+click-didyoumean==0.3.1
+click-plugins==1.1.1.2
+click-repl==0.3.0
+cryptography==45.0.5
+defusedxml==0.7.1
+dj-rest-auth==5.0.2
+django==5.1.4
+django-allauth==0.61.1
 django-celery-results==2.5.1
-psycopg2-binary
+django-cors-headers==4.3.1
+djangorestframework==3.14.0
+drf-yasg==1.21.7
+ffmpeg-python==0.2.0
+flake8==7.0.0
+future==1.0.0
+idna==3.10
+inflection==0.5.1
+iniconfig==2.1.0
+jmespath==1.0.1
+kombu==5.5.4
+mccabe==0.7.0
+mypy-extensions==1.1.0
+oauthlib==3.3.1
+packaging==25.0
+pathspec==0.12.1
+platformdirs==4.3.8
+pluggy==1.6.0
+prompt-toolkit==3.0.51
+psycopg2-binary==2.9.10
+pycodestyle==2.11.1
+pycparser==2.22
+pyflakes==3.2.0
+pyjwt==2.10.1
+pytest==7.4.3
+pytest-django==4.7.0
+python-dateutil==2.9.0.post0
+python-dotenv==1.0.0
+python-magic==0.4.27
+python3-openid==3.2.0
+pytz==2025.2
+pyyaml==6.0.2
+redis==5.0.1
+requests==2.32.4
+requests-oauthlib==2.0.0
+s3transfer==0.10.4
+setuptools==80.9.0
+six==1.17.0
+sqlparse==0.5.3
+tzdata==2025.2
+uritemplate==4.2.0
+urllib3==2.0.7
+vine==5.1.0
+wcwidth==0.2.13

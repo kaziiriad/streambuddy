@@ -1,11 +1,12 @@
-version: '3.8'
-
+version: "3.9"
 services:
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/app
       - media_data:/app/media
     ports:
       - "8000:8000"
@@ -17,6 +18,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+      - POSTGRES_HOST=postgres
     env_file:
       - ./.env
     depends_on:
@@ -24,13 +26,23 @@ services:
       - postgres
 
   celery:
-    build: .
-    command: celery -A streambuddy worker --loglevel=info
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: celery
+    command: python -m celery -A streambuddy worker --loglevel=info
     volumes:
-      - .:/app
       - media_data:/app/media
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
+      - DEBUG=true
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - POSTGRES_HOST=postgres
+    env_file:
+      - ./.env
     depends_on:
       - redis
       - postgres
@@ -50,7 +62,10 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
   media_data:
   redis_data:
+  postgres_data:
