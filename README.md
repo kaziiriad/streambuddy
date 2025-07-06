@@ -6,6 +6,8 @@ StreamBuddy is a scalable video streaming platform built using Django REST API, 
 
 ## 🚀 Features
 
+- **User Authentication**: Secure user registration and login using `dj-rest-auth` and `django-allauth`.
+- **Automated Deployment**: CI/CD pipeline using GitHub Actions, Pulumi, and Ansible.
 - **Secure Video Upload**
   - Support for large file uploads (up to 10GB)
   - Mime type validation
@@ -92,6 +94,8 @@ graph TB
 ## 🛠️ Technical Stack
 
 - **Backend**: Django REST Framework
+- **Authentication**: `dj-rest-auth`, `django-allauth`
+- **CI/CD**: GitHub Actions, Pulumi, Ansible
 - **Video Processing**: FFMPEG
 - **Task Queue**: Celery with Redis
 - **Storage**: AWS S3 / Local Storage
@@ -107,70 +111,36 @@ graph TB
 - Docker & Docker Compose (optional)
 - AWS Account (optional, for S3 storage)
 
-## 🔧 Installation
+## 🚀 Deployment
 
-### Using Docker (Recommended)
+The deployment of this application is fully automated using a CI/CD pipeline powered by GitHub Actions. When changes are pushed to the `main` branch, the following process is triggered:
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/streambuddy.git
-cd streambuddy
-```
+1.  **Infrastructure Provisioning**: Pulumi is used to define and provision the necessary cloud infrastructure on AWS, including the VPC, EC2 instances, and S3 buckets.
+2.  **Application Deployment**: An Ansible playbook is executed to configure the server, deploy the latest version of the application using Docker, and ensure all services are running correctly.
 
-2. Create and configure `.env` file:
-```bash
-cp app/.env.template app/.env
-# Edit .env with your settings
-```
+This automated workflow ensures that deployments are consistent, repeatable, and require no manual intervention.
 
-3. Build and run using Docker Compose:
-```bash
-docker-compose up --build
-```
-### Manual Installation
+### Local Development
 
-1. Install system dependencies:
-```bash
-# Ubuntu/Debian
-sudo apt-get update
-sudo apt-get install ffmpeg python3-dev
+For local development and testing, you can use the provided Docker Compose setup:
 
-# macOS
-brew install ffmpeg
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/yourusername/streambuddy.git
+    cd streambuddy
+    ```
 
-2. Install Python dependencies:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -e .
-```
+2.  **Create and configure the `.env` file:**
+    ```bash
+    cp .env.template .env
+    # Edit .env with your local settings
+    ```
 
-3. Set up Redis:
-```bash
-# Ubuntu/Debian
-sudo apt-get install redis-server
-sudo systemctl start redis
+3.  **Build and run the services:**
+    ```bash
+    docker-compose up --build
+    ```
 
-# macOS
-brew install redis
-brew services start redis
-```
-
-4. Run migrations:
-```bash
-python manage.py migrate
-```
-
-5. Start the development server:
-```bash
-python manage.py runserver
-```
-
-6. Start Celery worker:
-```bash
-celery -A streambuddy worker --loglevel=info
-```
 ## ⚙️ Configuration
 
 Key configuration options in `.env`:
