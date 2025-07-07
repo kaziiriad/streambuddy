@@ -228,3 +228,8 @@ test_samples/
 media/
 .python-version
 test_media/
+
+# Frontend
+/frontend/node_modules
+/frontend/dist
+/frontend/.vite

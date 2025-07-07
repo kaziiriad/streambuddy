@@ -6,16 +6,16 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
   const { register, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErrors([]);
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setErrors(['Passwords do not match']);
       return;
     }
 
@@ -23,7 +23,11 @@ const Register: React.FC = () => {
       await register(email, password, confirmPassword);
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      if (err instanceof Error) {
+        setErrors(err.message.split(' '));
+      } else {
+        setErrors(['Registration failed']);
+      }
     }
   };
 
@@ -93,9 +97,13 @@ const Register: React.FC = () => {
             </div>
           </div>
 
-          {error && (
+          {errors.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-600">{error}</p>
+              <ul className="list-disc list-inside text-sm text-red-600">
+                {errors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
             </div>
           )}
 

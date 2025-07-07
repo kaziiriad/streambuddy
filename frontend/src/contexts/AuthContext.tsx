@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from '../api/axios';
+import axios, { AxiosError } from 'axios';
 import { User, AuthContextType } from '../types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check for existing session on app load
     const storedUser = localStorage.getItem('streambuddy_user');
     const storedToken = localStorage.getItem('streambuddy_token');
-    if (storedUser && storedToken) {
+    if (storedUser && storedUser !== 'undefined' && storedToken) {
       setUser(JSON.parse(storedUser));
       axios.defaults.headers.common['Authorization'] = `Token ${storedToken}`;
     }
@@ -42,6 +42,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('streambuddy_token', token);
       axios.defaults.headers.common['Authorization'] = `Token ${token}`;
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response && axiosError.response.data) {
+          const errorData = axiosError.response.data as any;
+          if (errorData.non_field_errors) {
+            throw new Error(errorData.non_field_errors.join(' '));
+          }
+        }
+      }
       throw new Error('Login failed');
     } finally {
       setIsLoading(false);
@@ -55,7 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error('Passwords do not match');
       }
       
-      const response = await axios.post('/api/auth/registration/', { email, password, password2: confirmPassword });
+      const response = await axios.post('/api/auth/registration/', { email, password1: password, password2: confirmPassword });
       const { user, token } = response.data;
 
       setUser(user);
@@ -63,6 +72,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('streambuddy_token', token);
       axios.defaults.headers.common['Authorization'] = `Token ${token}`;
     } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response && axiosError.response.data) {
+          const errorData = axiosError.response.data as any;
+          const errorMessages = Object.keys(errorData).map(key => {
+            return `${key}: ${errorData[key].join(' ')}`;
+          });
+          throw new Error(errorMessages.join(' '));
+        }
+      }
       throw new Error(error instanceof Error ? error.message : 'Registration failed');
     } finally {
       setIsLoading(false);

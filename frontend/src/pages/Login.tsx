@@ -17,7 +17,11 @@ const Login: React.FC = () => {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError('Invalid email or password');
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred');
+      }
     }
   };
 
