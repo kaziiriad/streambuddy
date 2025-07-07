@@ -226,3 +226,4 @@ dump.rdb
 
 test_samples/
 media/
+.python-version

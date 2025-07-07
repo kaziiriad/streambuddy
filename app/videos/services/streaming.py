@@ -1,5 +1,6 @@
 from django.conf import settings
-from django.http import FileResponse, Http404
+from django.http import Http404
+from rest_framework.response import Response
 import os
 import logging
 
@@ -11,19 +12,18 @@ class StreamingService:
     def serve_mpd(self, title):
         """Serve MPD file."""
         try:
+            output_dir = self._get_output_dir()
             # Check both in root directory and title subdirectory
-            file_path = os.path.join(self.output_dir, f"{title}.mpd")
+            file_path = os.path.join(output_dir, f"{title}.mpd")
             if not os.path.exists(file_path):
                 # Try in subdirectory
-                file_path = os.path.join(self.output_dir, title, f"{title}.mpd")
+                file_path = os.path.join(output_dir, title, f"{title}.mpd")
                 if not os.path.exists(file_path):
                     raise FileNotFoundError()
 
             logging.info(f"Serving MPD file from: {file_path}")
-            response = FileResponse(
-                open(file_path, 'rb'),
-                content_type='application/dash+xml'
-            )
+            response = Response(content_type='application/dash+xml')
+            response['X-Accel-Redirect'] = os.path.join(settings.PROTECTED_MEDIA_URL, 'dash_output', f"{title}.mpd")
             response['Access-Control-Allow-Origin'] = '*'
             return response
         except FileNotFoundError:
@@ -36,11 +36,12 @@ class StreamingService:
     def serve_segment(self, title, segment):
         """Serve video segment."""
         try:
+            output_dir = self._get_output_dir()
             # Check both in root directory and title subdirectory
-            file_path = os.path.join(self.output_dir, segment)
+            file_path = os.path.join(output_dir, segment)
             if not os.path.exists(file_path):
                 # Try in subdirectory
-                file_path = os.path.join(self.output_dir, title, segment)
+                file_path = os.path.join(output_dir, title, segment)
                 if not os.path.exists(file_path):
                     raise FileNotFoundError()
 
@@ -56,10 +57,8 @@ class StreamingService:
             
             content_type = 'video/mp4' if segment.endswith('.mp4') or segment.endswith('.m4s') else 'application/octet-stream'
             
-            response = FileResponse(
-                open(file_path, 'rb'),
-                content_type=content_type
-            )
+            response = Response(content_type=content_type)
+            response['X-Accel-Redirect'] = os.path.join(settings.PROTECTED_MEDIA_URL, 'dash_output', segment)
             response['Access-Control-Allow-Origin'] = '*'
             response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
             response['Access-Control-Allow-Headers'] = 'Content-Type'

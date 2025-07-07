@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from django.http import FileResponse, Http404
+from django.http import Http404
 
 from ..models import Video
 from ..services.streaming import StreamingService
