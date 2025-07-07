@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from ..models import Video
 import os
 from django.conf import settings
 
@@ -14,14 +15,11 @@ class VideoUploadSerializer(serializers.Serializer):
             raise serializers.ValidationError("A video with this title already exists")
         return value
 
-class VideoMetadataSerializer(serializers.Serializer):
+class VideoMetadataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Video
+        fields = ('id', 'title', 'display_title', 'original_filename', 'uploaded_at', 'processed', 'mpd_file')
 
-    title = serializers.CharField()
-    display_title = serializers.CharField()  # Original title for display
-    original_filename = serializers.CharField()
-    uploaded_at = serializers.DateTimeField()
-    processed = serializers.BooleanField(default=False)
-    mpd_file = serializers.CharField(required=False)
 
 
 
