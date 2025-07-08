@@ -3,7 +3,6 @@ from celery import shared_task
 from .services.video_processor import VideoProcessor
 from .services.storage import StorageService
 from .models import Video, VideoStatus
-from streambuddy_common.utils.progress_tracker import FFmpegProgress
 from datetime import datetime
 import logging
 from celery import Task

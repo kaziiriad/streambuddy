@@ -1,4 +1,5 @@
 version: "3.9"
+
 services:
   frontend:
     build:
@@ -10,13 +11,14 @@ services:
       - "3000:80"
     depends_on:
       - backend
+    restart: unless-stopped
 
   backend:
     build:
       context: .
       dockerfile: Dockerfile
       target: web
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn streambuddy.wsgi:application --bind 0.0.0.0:8000 --workers 4
     volumes:
       - media_data:/app/media
       - static_data:/app/staticfiles
@@ -30,36 +32,44 @@ services:
       - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - POSTGRES_HOST=postgres
+      - DJANGO_SETTINGS_MODULE=streambuddy.settings
     env_file:
       - ./.env
     depends_on:
       - redis
       - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   celery:
     build:
       context: .
       dockerfile: Dockerfile
       target: celery
-    command: python -m celery -A streambuddy worker --loglevel=info
+    command: python -m celery -A streambuddy worker --loglevel=info --concurrency=2
     volumes:
       - media_data:/app/media
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - DEBUG=true
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
       - POSTGRES_HOST=postgres
+      - DJANGO_SETTINGS_MODULE=streambuddy.settings
     env_file:
       - ./.env
     depends_on:
       - redis
       - postgres
+    restart: unless-stopped
 
   nginx:
-    image: nginx:latest
+    image: nginx:alpine
     ports:
       - "80:80"
     volumes:
@@ -69,6 +79,7 @@ services:
     depends_on:
       - frontend
       - backend
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -76,9 +87,11 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
 
   postgres:
-    image: postgres:13-alpine
+    image: postgres:15-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -87,6 +100,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
 volumes:
   media_data:

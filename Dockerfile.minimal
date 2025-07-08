@@ -1,0 +1,56 @@
+# Minimal test to identify the culprit
+FROM python:3.12-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Install only essential runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    libmagic1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+WORKDIR /app
+
+# Copy and show requirements.txt content
+COPY requirements.txt ./
+RUN echo "=== REQUIREMENTS.TXT CONTENT ===" && cat requirements.txt
+
+# Install build deps temporarily
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && echo "=== SIZE AFTER BUILD DEPS ===" \
+    && du -sh / 2>/dev/null | tail -1
+
+# Install Python packages
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt \
+    && echo "=== SIZE AFTER PIP INSTALL ===" \
+    && du -sh / 2>/dev/null | tail -1 \
+    && echo "=== TOP 10 PYTHON PACKAGES BY SIZE ===" \
+    && du -sh /usr/local/lib/python3.12/site-packages/* 2>/dev/null | sort -hr | head -10
+
+# Remove build dependencies
+RUN apt-get remove -y build-essential libpq-dev \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/* /var/tmp/* \
+    && echo "=== SIZE AFTER CLEANUP ===" \
+    && du -sh / 2>/dev/null | tail -1
+
+# Copy application code
+COPY app/ /app/
+
+# Final cleanup
+RUN find /app -name "*.pyc" -delete \
+    && find /app -name "__pycache__" -type d -exec rm -rf {} + || true \
+    && find /usr/local -name "*.pyc" -delete \
+    && find /usr/local -name "__pycache__" -type d -exec rm -rf {} + || true \
+    && echo "=== FINAL SIZE ===" \
+    && du -sh / 2>/dev/null | tail -1
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
