@@ -11,8 +11,6 @@ StreamBuddy is a scalable video streaming platform built using Django REST API, 
 - **Secure Video Upload**
   - Support for large file uploads (up to 10GB)
   - Mime type validation
-  - Progress tracking
-  - Resumable uploads
 
 - **Video Processing**
   - Asynchronous processing using Celery
